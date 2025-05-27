@@ -1,0 +1,47 @@
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+env/
+.venv/
+
+# IDE/editor config
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Logs
+*.log
+
+# Unit test / coverage
+htmlcov/
+.coverage
+coverage.xml
+.cache
+.pytest_cache/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Environment variables / config
+.env
+.env.*
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Compiled C extensions
+*.so
+
+# Test result files
+*.out
+*.tmp
+*.bak
+
+# Database
+instance/zenday.db
