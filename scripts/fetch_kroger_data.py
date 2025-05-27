@@ -22,17 +22,29 @@ logger = logging.getLogger(__name__)
 
 def get_access_token():
     """Obtain OAuth2 token via Client Credentials flow."""
-    payload = {"grant_type": "client_credentials", "scope": "product.compact cart.basic:write"}
+    scopes = ["product.compact", "cart.basic:write"]
+    payload = {"grant_type": "client_credentials", "scope": " ".join(scopes)}
     try:
+        logger.info(f"Requesting token with scopes: {payload['scope']}")
         resp = requests.post(TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload)
-        resp.raise_for_status()
+        
+        if resp.status_code != 200:
+            error_msg = f"Token request failed with status {resp.status_code}"
+            try:
+                error_details = resp.json()
+                error_msg += f": {error_details}"
+            except:
+                error_msg += f": {resp.text}"
+            logger.error(error_msg)
+            resp.raise_for_status()
+            
         token = resp.json().get("access_token")
         if not token:
             raise ValueError("No access_token in response")
-        logger.info("Obtained access token")
+        logger.info("Obtained access token successfully")
         return token
     except Exception as e:
-        logger.error(f"Error obtaining token: {e}")
+        logger.error(f"Error obtaining token: {str(e)}")
         raise
 
 

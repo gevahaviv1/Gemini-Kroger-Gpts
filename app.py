@@ -9,11 +9,7 @@ from scripts.fetch_kroger_data import (
     get_access_token,
     fetch_nearest_location,
 )
-from scripts.kroger_cart import (
-    get_cart,
-    add_to_cart,
-    remove_from_cart
-)
+from scripts.kroger_cart import get_cart, add_to_cart, remove_from_cart
 from map_kroger_data.mapper import map_kroger_to_zenday
 
 scheduler = BackgroundScheduler()
@@ -37,7 +33,7 @@ def create_app():
 
     # top-of-file
     WATCHED_IDS = ["0001111041700"]
-    POLL_INTERVAL_MINUTES = 5
+    POLL_INTERVAL_MINUTES = 10
 
     def process_product_data(prod_data):
         """
@@ -131,7 +127,7 @@ def create_app():
     scheduler.add_job(
         func=monitor_watched_products,
         trigger="interval",
-        seconds=POLL_INTERVAL_MINUTES,
+        minutes=POLL_INTERVAL_MINUTES,
         id="kroger_watchlist_job",
         replace_existing=True,
     )
@@ -233,10 +229,9 @@ def create_app():
             return jsonify({"error": "No Kroger location found"}), 404
 
         try:
-            result = add_to_cart(token, loc_id, [{
-                "productId": data["product_id"],
-                "quantity": quantity
-            }])
+            result = add_to_cart(
+                token, loc_id, [{"productId": data["product_id"], "quantity": quantity}]
+            )
             return jsonify(result), 200
         except Exception as e:
             return jsonify({"error": str(e)}), 500
