@@ -23,15 +23,24 @@ def get_cart(access_token: str, location_id: str) -> Dict:
     """Get the current cart contents."""
     headers = {
         "Accept": "application/json",
-        "Authorization": f"Bearer {access_token}"
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json"
     }
     
-    response = requests.get(
-        f"https://api.kroger.com/v1/cart?locationId={location_id}",
-        headers=headers
-    )
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.get(
+            f"https://api.kroger.com/v1/cart?locationId={location_id}",
+            headers=headers
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        if e.response is not None:
+            if e.response.status_code == 401:
+                raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")
+            elif e.response.status_code == 403:
+                raise Exception("Forbidden: Your token doesn't have the required cart.basic:write scope")
+        raise Exception(f"Cart API error: {str(e)}")
 
 def add_to_cart(access_token: str, location_id: str, items: List[Dict]) -> Dict:
     """
@@ -57,13 +66,23 @@ def add_to_cart(access_token: str, location_id: str, items: List[Dict]) -> Dict:
         "locationId": location_id
     }
     
-    response = requests.put(
-        "https://api.kroger.com/v1/cart/add",
-        headers=headers,
-        json=data
-    )
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.put(
+            "https://api.kroger.com/v1/cart/add",
+            headers=headers,
+            json=data
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        if e.response is not None:
+            if e.response.status_code == 401:
+                raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")
+            elif e.response.status_code == 403:
+                raise Exception("Forbidden: Your token doesn't have the required cart.basic:write scope")
+            elif e.response.status_code == 400:
+                raise Exception(f"Bad request: {e.response.json().get('reason', 'Unknown error')}")
+        raise Exception(f"Cart API error: {str(e)}")
 
 def remove_from_cart(access_token: str, location_id: str, item_id: str) -> Dict:
     """Remove an item from the cart."""
@@ -81,10 +100,20 @@ def remove_from_cart(access_token: str, location_id: str, item_id: str) -> Dict:
         "locationId": location_id
     }
     
-    response = requests.put(
-        "https://api.kroger.com/v1/cart/add",  # Same endpoint as add, but quantity=0
-        headers=headers,
-        json=data
-    )
-    response.raise_for_status()
-    return response.json()
+    try:
+        response = requests.put(
+            "https://api.kroger.com/v1/cart/add",  # Same endpoint as add, but quantity=0
+            headers=headers,
+            json=data
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        if e.response is not None:
+            if e.response.status_code == 401:
+                raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")
+            elif e.response.status_code == 403:
+                raise Exception("Forbidden: Your token doesn't have the required cart.basic:write scope")
+            elif e.response.status_code == 400:
+                raise Exception(f"Bad request: {e.response.json().get('reason', 'Unknown error')}")
+        raise Exception(f"Cart API error: {str(e)}")

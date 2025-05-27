@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 def get_access_token():
     """Obtain OAuth2 token via Client Credentials flow."""
-    payload = {"grant_type": "client_credentials", "scope": "product.compact"}
+    payload = {"grant_type": "client_credentials", "scope": "product.compact cart.basic:write"}
     try:
         resp = requests.post(TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload)
         resp.raise_for_status()
