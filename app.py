@@ -9,6 +9,11 @@ from scripts.fetch_kroger_data import (
     get_access_token,
     fetch_nearest_location,
 )
+from scripts.kroger_cart import (
+    get_cart,
+    add_to_cart,
+    remove_from_cart
+)
 from map_kroger_data.mapper import map_kroger_to_zenday
 
 scheduler = BackgroundScheduler()
@@ -189,6 +194,74 @@ def create_app():
                 for h in history
             ]
         )
+
+    # Cart management endpoints
+    @app.route("/cart", methods=["GET"])
+    def view_cart():
+        token = get_access_token()
+        if not token:
+            return jsonify({"error": "Failed to get access token"}), 401
+
+        # Get nearest location
+        loc = fetch_nearest_location(token, zip_code="45202")
+        loc_id = loc.get("locationId")
+        if not loc_id:
+            return jsonify({"error": "No Kroger location found"}), 404
+
+        try:
+            cart = get_cart(token, loc_id)
+            return jsonify(cart), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/cart/add", methods=["POST"])
+    def add_item_to_cart():
+        token = get_access_token()
+        if not token:
+            return jsonify({"error": "Failed to get access token"}), 401
+
+        data = request.get_json()
+        if not data or "product_id" not in data:
+            return jsonify({"error": "Missing product_id"}), 400
+
+        quantity = data.get("quantity", 1)
+
+        # Get nearest location
+        loc = fetch_nearest_location(token, zip_code="45202")
+        loc_id = loc.get("locationId")
+        if not loc_id:
+            return jsonify({"error": "No Kroger location found"}), 404
+
+        try:
+            result = add_to_cart(token, loc_id, [{
+                "productId": data["product_id"],
+                "quantity": quantity
+            }])
+            return jsonify(result), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
+
+    @app.route("/cart/remove", methods=["DELETE"])
+    def remove_item_from_cart():
+        token = get_access_token()
+        if not token:
+            return jsonify({"error": "Failed to get access token"}), 401
+
+        data = request.get_json()
+        if not data or "product_id" not in data:
+            return jsonify({"error": "Missing product_id"}), 400
+
+        # Get nearest location
+        loc = fetch_nearest_location(token, zip_code="45202")
+        loc_id = loc.get("locationId")
+        if not loc_id:
+            return jsonify({"error": "No Kroger location found"}), 404
+
+        try:
+            result = remove_from_cart(token, loc_id, data["product_id"])
+            return jsonify(result), 200
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
 
     return app
 
