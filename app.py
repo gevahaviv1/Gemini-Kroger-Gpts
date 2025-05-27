@@ -192,11 +192,37 @@ def create_app():
         )
 
     # Cart management endpoints
+    @app.route("/auth/login")
+    def auth_login():
+        """Start OAuth2 Authorization Code flow for cart access."""
+        authorize_url = "https://api.kroger.com/v1/connect/oauth2/authorize"
+        params = {
+            "client_id": os.getenv("KROGER_CLIENT_ID"),
+            "response_type": "code",
+            "redirect_uri": os.getenv("REDIRECT_URI", "http://localhost:5000/auth/callback"),
+            "scope": "cart.basic:write",
+        }
+        auth_url = f"{authorize_url}?" + "&".join(f"{k}={v}" for k, v in params.items())
+        return jsonify({"auth_url": auth_url})
+
+    @app.route("/auth/callback")
+    def auth_callback():
+        """Handle OAuth2 callback and get access token."""
+        code = request.args.get("code")
+        if not code:
+            return jsonify({"error": "No authorization code received"}), 400
+
+        try:
+            token = get_access_token(auth_code=code)
+            # Store token in session or database for subsequent requests
+            return jsonify({"message": "Successfully authenticated"})
+        except Exception as e:
+            return jsonify({"error": str(e)}), 401
+
     @app.route("/cart", methods=["GET"])
     def view_cart():
-        token = get_access_token()
-        if not token:
-            return jsonify({"error": "Failed to get access token"}), 401
+        # TODO: Get token from session or database
+        return jsonify({"error": "Please authenticate first at /auth/login"}), 401
 
         # Get nearest location
         loc = fetch_nearest_location(token, zip_code="45202")

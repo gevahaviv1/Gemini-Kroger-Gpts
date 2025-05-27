@@ -20,10 +20,28 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_access_token():
-    """Obtain OAuth2 token via Client Credentials flow."""
-    scopes = ["product.compact", "cart.basic:write"]
-    payload = {"grant_type": "client_credentials", "scope": " ".join(scopes)}
+def get_access_token(auth_code=None):
+    """
+    Get access token using either Client Credentials flow (for product API)
+    or Authorization Code flow (for cart API).
+    
+    Args:
+        auth_code: Optional authorization code from OAuth2 redirect
+    """
+    if auth_code:
+        # Authorization Code flow for cart operations
+        payload = {
+            "grant_type": "authorization_code",
+            "code": auth_code,
+            "redirect_uri": os.getenv("REDIRECT_URI", "http://localhost:5000/auth/callback"),
+            "scope": "cart.basic:write"
+        }
+    else:
+        # Client Credentials flow for product operations
+        payload = {
+            "grant_type": "client_credentials",
+            "scope": "product.compact"
+        }
     try:
         logger.info(f"Requesting token with scopes: {payload['scope']}")
         resp = requests.post(TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload)
