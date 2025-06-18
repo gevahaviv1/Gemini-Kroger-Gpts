@@ -45,3 +45,4 @@ Thumbs.db
 
 # Database
 instance/zenday.db
+token.json
