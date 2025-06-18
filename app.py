@@ -1,5 +1,6 @@
 import os
 import json
+import logging
 from flask import Flask, request, jsonify, session, redirect
 from db.models import db, Product, PriceHistory
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -29,6 +30,14 @@ from scripts.kroger_cart import get_cart, create_cart, add_to_cart, remove_from_
 from map_kroger_data.mapper import map_kroger_to_zenday
 
 scheduler = BackgroundScheduler()
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 
 def create_app():
@@ -85,9 +94,9 @@ def create_app():
                     product_id=pid, promo_price=new_pr, regular_price=new_reg
                 )
                 db.session.add(history)
-                print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+                logger.info(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
                 db.session.commit()
-                print(f"🔔 Price drop for {pid}: {old_pr} → {new_pr}")
+                logger.info(f"🔔 Price drop for {pid}: {old_pr} → {new_pr}")
                 return {"alert": True, "old_price": old_pr, "new_price": new_pr}
                 # Record the price drop
 
@@ -95,7 +104,7 @@ def create_app():
                 product_id=pid, promo_price=new_pr, regular_price=new_reg
             )
             db.session.add(history)
-            print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+            logger.info(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
             db.session.commit()
             return {"alert": False}
 
@@ -118,14 +127,14 @@ def create_app():
             temperature_sensitive=prod_data.get("temperature_sensitive"),
         )
         db.session.add(new_p)
-        print(f"🔔 New product added: {pid} @ promo {new_pr}")
+        logger.info(f"🔔 New product added: {pid} @ promo {new_pr}")
 
         # Record the price drop
         history = PriceHistory(
             product_id=pid, promo_price=new_pr, regular_price=new_reg
         )
         db.session.add(history)
-        print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+        logger.info(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
         db.session.commit()
         return {"alert": True, "new_price": new_pr}
 
@@ -136,14 +145,14 @@ def create_app():
             loc = fetch_nearest_location(token, zip_code="45202")
             loc_id = loc.get("locationId")
             if not loc_id:
-                print("⚠️  No Kroger location found")
+                logger.warning("⚠️  No Kroger location found")
                 return
 
             for pid in WATCHED_IDS:
                 items = fetch_products(token, term=pid, limit=5, location_id=loc_id)
                 raw = next((i for i in items if i.get("productId") == pid), None)
                 if not raw:
-                    print(f"⚠️  No data for {pid}")
+                    logger.warning(f"⚠️  No data for {pid}")
                     continue
                 prod_data = map_kroger_to_zenday(raw)
                 process_product_data(prod_data)
@@ -245,20 +254,20 @@ def create_app():
 
         try:
             # Get token with full debugging
-            print("\n--- DEBUG: Getting access token ---")
-            print(f"Authorization code: {code[:10]}...")
+            logger.info("--- DEBUG: Getting access token ---")
+            logger.info(f"Authorization code: {code[:10]}...")
             full_token_response = get_access_token(auth_code=code, return_full_response=True)
-            
+
             # Log the full token response for debugging
-            print(f"\n--- DEBUG: Full token response ---")
-            print(f"Response: {json.dumps(full_token_response, indent=2)}")
+            logger.info("--- DEBUG: Full token response ---")
+            logger.info(f"Response: {json.dumps(full_token_response, indent=2)}")
             
             # Extract the token
             token = full_token_response.get('access_token')
             if not token:
                 raise ValueError("No access_token in response")
                 
-            print(f"✅ Auth success! Token received: {token[:10]}...")
+            logger.info(f"✅ Auth success! Token received: {token[:10]}...")
             
             # Store in both session and file for reliability
             session['kroger_token'] = token
@@ -270,7 +279,7 @@ def create_app():
             
             # Also store in file
             save_token(token)
-            print(f"✅ Saved token to file and session")
+            logger.info("✅ Saved token to file and session")
             
             # Return the response
             return jsonify({
@@ -279,15 +288,15 @@ def create_app():
                 "full_response": full_token_response
             })
         except Exception as e:
-            print(f"❌ Auth error: {str(e)}")
+            logger.error(f"❌ Auth error: {str(e)}")
             return jsonify({"error": str(e)}), 401
 
     @app.route("/cart", methods=["GET"])
     def view_cart():
         # Try to get token from session first, then from file
         token = session.get('kroger_token') or get_saved_token()
-        print(f"🔍 /cart: Session keys: {list(session.keys())}")
-        print(f"🔍 /cart: Token available: {'Yes' if token else 'No'}")
+        logger.info(f"🔍 /cart: Session keys: {list(session.keys())}")
+        logger.info(f"🔍 /cart: Token available: {'Yes' if token else 'No'}")
         if not token:
             return jsonify({"error": "Please authenticate first at /auth/login"}), 401
 
@@ -297,15 +306,15 @@ def create_app():
             cart = get_cart(token)
             return jsonify(cart), 200
         except Exception as e:
-            print(f"Cart error: {str(e)}")
+            logger.error(f"Cart error: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     @app.route("/cart/add", methods=["POST"])
     def add_item_to_cart():
         # Try to get token from session first, then from file
         token = session.get('kroger_token') or get_saved_token()
-        print(f"🔍 /cart/add: Session keys: {list(session.keys())}")
-        print(f"🔍 /cart/add: Token available: {'Yes' if token else 'No'}")
+        logger.info(f"🔍 /cart/add: Session keys: {list(session.keys())}")
+        logger.info(f"🔍 /cart/add: Token available: {'Yes' if token else 'No'}")
         if not token:
             return jsonify({"error": "Please authenticate first at /auth/login"}), 401
 
@@ -320,15 +329,15 @@ def create_app():
         try:
             # First try to get the current cart
             try:
-                print("Getting current cart...")
+                logger.info("Getting current cart...")
                 cart_response = get_cart(token)
                 # Get the cart ID from the response
                 cart_id = None
                 if 'data' in cart_response and len(cart_response['data']) > 0:
                     cart_id = cart_response['data'][0]['id']
-                    print(f"Existing cart found with ID: {cart_id}")
+                    logger.info(f"Existing cart found with ID: {cart_id}")
             except Exception as e:
-                print(f"No existing cart found or error: {str(e)}")
+                logger.info(f"No existing cart found or error: {str(e)}")
                 cart_id = None
             
             # Prepare item data
@@ -343,22 +352,22 @@ def create_app():
             
             # If we have a cart ID, add to existing cart, otherwise create a new one
             if cart_id:
-                print(f"Adding item to existing cart {cart_id}...")
+                logger.info(f"Adding item to existing cart {cart_id}...")
                 result = add_to_cart(token, cart_id, [item_data])
                 return jsonify(result), 200
             else:
-                print("Creating new cart with item...")
+                logger.info("Creating new cart with item...")
                 result = create_cart(token, [item_data])
                 return jsonify(result), 201
         except Exception as e:
-            print(f"Cart error: {str(e)}")
+            logger.error(f"Cart error: {str(e)}")
             return jsonify({"error": str(e)}), 500
             
     @app.route("/cart/remove", methods=["DELETE"])
     def remove_item_from_cart():
         # Try to get token from session first, then from file
         token = session.get('kroger_token') or get_saved_token()
-        print(f"🔍 /cart/remove: Token available: {'Yes' if token else 'No'}")
+        logger.info(f"🔍 /cart/remove: Token available: {'Yes' if token else 'No'}")
         if not token:
             return jsonify({"error": "Please authenticate first at /auth/login"}), 401
 
@@ -369,25 +378,25 @@ def create_app():
         try:
             # First try to get the current cart
             try:
-                print("Getting current cart...")
+                logger.info("Getting current cart...")
                 cart_response = get_cart(token)
                 # Get the cart ID from the response
                 if 'data' in cart_response and len(cart_response['data']) > 0:
                     cart_id = cart_response['data'][0]['id']
-                    print(f"Existing cart found with ID: {cart_id}")
+                    logger.info(f"Existing cart found with ID: {cart_id}")
                 else:
                     return jsonify({"error": "No cart found"}), 404
             except Exception as e:
-                print(f"Error getting cart: {str(e)}")
+                logger.error(f"Error getting cart: {str(e)}")
                 return jsonify({"error": "No cart found"}), 404
             
             # Remove the item from the cart
             product_id = data["product_id"]
-            print(f"Removing item {product_id} from cart {cart_id}...")
+            logger.info(f"Removing item {product_id} from cart {cart_id}...")
             result = remove_from_cart(token, cart_id, product_id)
             return jsonify(result), 200
         except Exception as e:
-            print(f"Cart error: {str(e)}")
+            logger.error(f"Cart error: {str(e)}")
             return jsonify({"error": str(e)}), 500
 
     return app
@@ -400,7 +409,7 @@ if __name__ == "__main__":
     from werkzeug.serving import is_running_from_reloader
 
     if not is_running_from_reloader():
-        print("Starting background scheduler...")
+        logger.info("Starting background scheduler...")
         scheduler.start()
 
     # Run with explicit session support

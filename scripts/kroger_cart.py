@@ -2,8 +2,17 @@
 Kroger Cart API operations module.
 """
 import os
+import logging
 import requests
 from typing import Dict, List, Optional
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
 
 # The get_cart_token function is not needed based on the documentation
 # The OAuth2 token is used directly for cart operations
@@ -20,30 +29,30 @@ def get_cart(access_token: str, cart_id: Optional[str] = None) -> Dict:
         "Authorization": f"Bearer {access_token}"
     }
     
-    print(f"\n--- DEBUG: GET CART ---")
-    print(f"Token first 20 chars: {access_token[:20]}...")
-    print(f"Headers: {headers}")
+    logger.info("--- DEBUG: GET CART ---")
+    logger.info(f"Token first 20 chars: {access_token[:20]}...")
+    logger.info(f"Headers: {headers}")
     
     try:
         # If cart_id is provided, get that specific cart, otherwise get the default cart
         url = f"https://api.kroger.com/v1/cart/{cart_id}" if cart_id else "https://api.kroger.com/v1/cart"
-        print(f"Request URL: {url}")
+        logger.info(f"Request URL: {url}")
         response = requests.get(url, headers=headers)
-        print(f"Response status: {response.status_code}")
+        logger.info(f"Response status: {response.status_code}")
         
         # Try to print the response body, but handle any parsing errors
         try:
-            print(f"Response body: {response.text[:200]}...")
+            logger.info(f"Response body: {response.text[:200]}...")
         except:
-            print("Could not print response body")
+            logger.info("Could not print response body")
         
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Exception: {str(e)}")
+        logger.error(f"Exception: {str(e)}")
         if e.response is not None:
-            print(f"Response status: {e.response.status_code}")
-            print(f"Response body: {e.response.text[:200]}...")
+            logger.error(f"Response status: {e.response.status_code}")
+            logger.error(f"Response body: {e.response.text[:200]}...")
             
             if e.response.status_code == 401:
                 raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")
@@ -74,10 +83,10 @@ def create_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
         "Content-Type": "application/json"
     }
     
-    print(f"\n--- DEBUG: CREATE CART ---")
-    print(f"Token first 20 chars: {access_token[:20]}...")
-    print(f"Headers: {headers}")
-    print(f"Raw items: {items}")
+    logger.info("--- DEBUG: CREATE CART ---")
+    logger.info(f"Token first 20 chars: {access_token[:20]}...")
+    logger.info(f"Headers: {headers}")
+    logger.info(f"Raw items: {items}")
     
     # Transform items to the format expected by the API
     formatted_items = []
@@ -95,17 +104,17 @@ def create_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
             
         formatted_items.append(formatted_item)
     
-    print(f"Formatted items: {formatted_items}")
+    logger.info(f"Formatted items: {formatted_items}")
     
     data = {
         "items": formatted_items
     }
     
-    print(f"Request body: {data}")
+    logger.info(f"Request body: {data}")
     
     try:
         url = "https://api.kroger.com/v1/cart"
-        print(f"Request URL: {url}")
+        logger.info(f"Request URL: {url}")
         
         response = requests.post(
             url,
@@ -113,19 +122,19 @@ def create_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
             json=data
         )
         
-        print(f"Response status: {response.status_code}")
+        logger.info(f"Response status: {response.status_code}")
         try:
-            print(f"Response body: {response.text[:200]}...")
+            logger.info(f"Response body: {response.text[:200]}...")
         except:
-            print("Could not print response body")
+            logger.info("Could not print response body")
             
         response.raise_for_status()
         return response.json()
     except requests.exceptions.RequestException as e:
-        print(f"Exception: {str(e)}")
+        logger.error(f"Exception: {str(e)}")
         if e.response is not None:
-            print(f"Response status: {e.response.status_code}")
-            print(f"Response body: {e.response.text[:200]}...")
+            logger.error(f"Response status: {e.response.status_code}")
+            logger.error(f"Response body: {e.response.text[:200]}...")
             
             if e.response.status_code == 401:
                 raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")
@@ -157,11 +166,11 @@ def add_to_cart(access_token: str, cart_id: str, items: List[Dict], modality: st
         "Content-Type": "application/json"
     }
     
-    print(f"\n--- DEBUG: ADD TO CART ---")
-    print(f"Token first 20 chars: {access_token[:20]}...")
-    print(f"Cart ID: {cart_id}")
-    print(f"Headers: {headers}")
-    print(f"Raw items: {items}")
+    logger.info("--- DEBUG: ADD TO CART ---")
+    logger.info(f"Token first 20 chars: {access_token[:20]}...")
+    logger.info(f"Cart ID: {cart_id}")
+    logger.info(f"Headers: {headers}")
+    logger.info(f"Raw items: {items}")
     
     # Transform items to the format expected by the API
     formatted_items = []
@@ -179,15 +188,15 @@ def add_to_cart(access_token: str, cart_id: str, items: List[Dict], modality: st
             
         formatted_items.append(formatted_item)
     
-    print(f"Formatted items: {formatted_items}")
+    logger.info(f"Formatted items: {formatted_items}")
     
     try:
         # Add items one by one to the cart
         results = []
         for item in formatted_items:
             url = f"https://api.kroger.com/v1/cart/{cart_id}/items"
-            print(f"Request URL: {url}")
-            print(f"Request body: {item}")
+            logger.info(f"Request URL: {url}")
+            logger.info(f"Request body: {item}")
             
             response = requests.put(
                 url,
@@ -195,21 +204,21 @@ def add_to_cart(access_token: str, cart_id: str, items: List[Dict], modality: st
                 json=item
             )
             
-            print(f"Response status: {response.status_code}")
+            logger.info(f"Response status: {response.status_code}")
             try:
-                print(f"Response body: {response.text[:200]}...")
+                logger.info(f"Response body: {response.text[:200]}...")
             except:
-                print("Could not print response body")
+                logger.info("Could not print response body")
                 
             response.raise_for_status()
             results.append(response.json())
         
         return {"results": results}
     except requests.exceptions.RequestException as e:
-        print(f"Exception: {str(e)}")
+        logger.error(f"Exception: {str(e)}")
         if e.response is not None:
-            print(f"Response status: {e.response.status_code}")
-            print(f"Response body: {e.response.text[:200]}...")
+            logger.error(f"Response status: {e.response.status_code}")
+            logger.error(f"Response body: {e.response.text[:200]}...")
             
             if e.response.status_code == 401:
                 raise Exception("Unauthorized: Please check your API credentials and ensure you have cart access")

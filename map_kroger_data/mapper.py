@@ -1,8 +1,17 @@
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+logger = logging.getLogger(__name__)
+
 def map_kroger_to_zenday(data: dict) -> dict:
     item = data.get("items", [{}])[0]
     aisle = (data.get("aisleLocations") or [{}])[0]
     image = data.get("images", [{}])[0].get("sizes", [{}])[0]
-    print(item.get("price", {}).get("regular"))
+    logger.info(item.get("price", {}).get("regular"))
     return {
         "id": data.get("productId"),
         "name": data.get("description"),

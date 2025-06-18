@@ -39,7 +39,7 @@ def get_access_token(auth_code=None, return_full_response=False):
             # Note: We're not setting scope here because it should be set during the initial authorization request
         }
         
-        print(f"Authorization Code payload: {payload}")
+        logger.info(f"Authorization Code payload: {payload}")
     else:
         # Client Credentials flow for product operations
         payload = {
@@ -58,16 +58,16 @@ def get_access_token(auth_code=None, return_full_response=False):
             "Authorization": f"Basic {auth_b64}"
         }
         
-        print(f"Token request URL: {TOKEN_URL}")
-        print(f"Token request headers: {headers}")
+        logger.info(f"Token request URL: {TOKEN_URL}")
+        logger.info(f"Token request headers: {headers}")
         
         resp = requests.post(TOKEN_URL, headers=headers, data=payload)
         
-        print(f"Token response status: {resp.status_code}")
+        logger.info(f"Token response status: {resp.status_code}")
         try:
-            print(f"Token response body: {resp.text[:200]}...")
+            logger.info(f"Token response body: {resp.text[:200]}...")
         except:
-            print("Could not print response body")
+            logger.info("Could not print response body")
         
         if resp.status_code != 200:
             error_msg = f"Failed to get token. Status code: {resp.status_code}"
