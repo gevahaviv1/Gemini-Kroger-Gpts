@@ -17,8 +17,11 @@ def auth_login():
     params = {
         "client_id": os.getenv("KROGER_CLIENT_ID"),
         "response_type": "code",
-        "redirect_uri": os.getenv("REDIRECT_URI", "http://localhost:5000/auth/callback"),
-        "scope": "cart:read cart:write product.compact profile.compact",
+        "redirect_uri": os.getenv(
+            "REDIRECT_URI", "http://localhost:5000/auth/callback"
+        ),
+        # The Kroger API expects cart.basic scopes for cart operations
+        "scope": "cart.basic:read cart.basic:write product.compact profile.compact",
     }
     auth_url = f"{authorize_url}?" + "&".join(f"{k}={v}" for k, v in params.items())
     return jsonify({"auth_url": auth_url})
