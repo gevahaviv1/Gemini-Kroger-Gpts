@@ -46,3 +46,6 @@ Thumbs.db
 # Database
 instance/zenday.db
 token.json
+debug_kroger_api.py
+map_kroger_data/test_mapper.py
+PROJECT_STRUCTURE.txt
