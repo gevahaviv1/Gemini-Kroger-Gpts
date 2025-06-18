@@ -20,19 +20,77 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def get_access_token():
-    """Obtain OAuth2 token via Client Credentials flow."""
-    payload = {"grant_type": "client_credentials", "scope": "product.compact"}
+def get_access_token(auth_code=None, return_full_response=False):
+    """
+    Get access token using either Client Credentials flow (for product API)
+    or Authorization Code flow (for cart API).
+    
+    Args:
+        auth_code: Optional authorization code from OAuth2 redirect
+        return_full_response: If True, returns the full response JSON instead of just the token
+    """
+    if auth_code:
+        # Authorization Code flow for cart operations
+        payload = {
+            "grant_type": "authorization_code",
+            "code": auth_code,
+            "redirect_uri": os.getenv("REDIRECT_URI", "http://localhost:5000/auth/callback")
+            # Note: We're not setting scope here because it should be set during the initial authorization request
+        }
+        
+        print(f"Authorization Code payload: {payload}")
+    else:
+        # Client Credentials flow for product operations
+        payload = {
+            "grant_type": "client_credentials",
+            "scope": "product.compact"
+        }
+    
     try:
-        resp = requests.post(TOKEN_URL, auth=(CLIENT_ID, CLIENT_SECRET), data=payload)
-        resp.raise_for_status()
-        token = resp.json().get("access_token")
+        # Encode client ID and secret for Authorization header
+        auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
+        auth_bytes = auth_str.encode('ascii')
+        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
+        
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {auth_b64}"
+        }
+        
+        print(f"Token request URL: {TOKEN_URL}")
+        print(f"Token request headers: {headers}")
+        
+        resp = requests.post(TOKEN_URL, headers=headers, data=payload)
+        
+        print(f"Token response status: {resp.status_code}")
+        try:
+            print(f"Token response body: {resp.text[:200]}...")
+        except:
+            print("Could not print response body")
+        
+        if resp.status_code != 200:
+            error_msg = f"Failed to get token. Status code: {resp.status_code}"
+            try:
+                error_details = resp.json()
+                error_msg += f": {error_details}"
+            except:
+                error_msg += f": {resp.text}"
+            logger.error(error_msg)
+            resp.raise_for_status()
+        
+        response_data = resp.json()
+        
+        # If requested, return the full response
+        if return_full_response:
+            return response_data
+            
+        token = response_data.get("access_token")
         if not token:
             raise ValueError("No access_token in response")
-        logger.info("Obtained access token")
+        logger.info("Obtained access token successfully")
         return token
     except Exception as e:
-        logger.error(f"Error obtaining token: {e}")
+        logger.error(f"Error obtaining token: {str(e)}")
         raise
 
 
