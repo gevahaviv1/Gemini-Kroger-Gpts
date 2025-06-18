@@ -3,7 +3,7 @@ import json
 from flask import Flask, request, jsonify, session, redirect
 from db.models import db, Product, PriceHistory
 from apscheduler.schedulers.background import BackgroundScheduler
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Simple token storage
 def save_token(token):
@@ -70,7 +70,7 @@ def create_app():
         new_reg = prod_data["price"]["regular"]
         new_pr = prod_data["price"]["promo"]
 
-        existing = Product.query.get(pid)
+        existing = db.session.get(Product, pid)
 
         if existing:
             old_pr = existing.promo_price or 0
@@ -85,7 +85,7 @@ def create_app():
                     product_id=pid, promo_price=new_pr, regular_price=new_reg
                 )
                 db.session.add(history)
-                print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+                print(f"✅ Polled prices at {datetime.now(timezone.utc).isoformat()}")
                 db.session.commit()
                 print(f"🔔 Price drop for {pid}: {old_pr} → {new_pr}")
                 return {"alert": True, "old_price": old_pr, "new_price": new_pr}
@@ -95,7 +95,7 @@ def create_app():
                 product_id=pid, promo_price=new_pr, regular_price=new_reg
             )
             db.session.add(history)
-            print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+            print(f"✅ Polled prices at {datetime.now(timezone.utc).isoformat()}")
             db.session.commit()
             return {"alert": False}
 
@@ -125,7 +125,7 @@ def create_app():
             product_id=pid, promo_price=new_pr, regular_price=new_reg
         )
         db.session.add(history)
-        print(f"✅ Polled prices at {datetime.utcnow().isoformat()}")
+        print(f"✅ Polled prices at {datetime.now(timezone.utc).isoformat()}")
         db.session.commit()
         return {"alert": True, "new_price": new_pr}
 

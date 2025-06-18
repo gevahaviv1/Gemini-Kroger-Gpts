@@ -7,7 +7,6 @@ load_dotenv()
 
 CLIENT_ID = os.getenv("KROGER_CLIENT_ID")
 CLIENT_SECRET = os.getenv("KROGER_CLIENT_SECRET")
-AUTHORIZE_URL = "https://api.kroger.com/v1/connect/oauth2/authorize"
 TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token"
 PRODUCTS_URL = "https://api.kroger.com/v1/products"
 
