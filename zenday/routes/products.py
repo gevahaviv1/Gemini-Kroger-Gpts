@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, current_app
 
 from ..models import db, Product, PriceHistory
 from ..services.kroger_api import fetch_products, fetch_nearest_location, get_access_token
-from map_kroger_data.mapper import map_kroger_to_zenday
+from ..mappers.kroger import map_kroger_to_zenday
 
 logger = logging.getLogger(__name__)
 

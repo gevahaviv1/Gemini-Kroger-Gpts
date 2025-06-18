@@ -40,6 +40,14 @@ A Flask-based application that monitors Kroger product prices and manages shoppi
    KROGER_CLIENT_SECRET=your_client_secret
    ```
 
+## Project Structure
+
+- `zenday.models` - database models
+- `zenday.routes` - API routes
+- `zenday.services` - external service helpers
+- `zenday.mappers` - data mapping utilities
+- `zenday.utils` - general utilities
+
 ## Usage
 
 1. Start the application:

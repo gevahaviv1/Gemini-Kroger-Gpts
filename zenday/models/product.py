@@ -1,8 +1,4 @@
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime, timezone
-
-db = SQLAlchemy()
-
+from . import db
 
 class Product(db.Model):
     __tablename__ = "products"
@@ -22,16 +18,3 @@ class Product(db.Model):
     location = db.Column(db.JSON)
     dimensions = db.Column(db.JSON)
     temperature_sensitive = db.Column(db.Boolean)
-
-
-class PriceHistory(db.Model):
-    __tablename__ = "price_history"
-    id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.String, db.ForeignKey("products.id"), nullable=False)
-    timestamp = db.Column(
-        db.DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
-    )
-    promo_price = db.Column(db.Float, nullable=False)
-    regular_price = db.Column(db.Float, nullable=False)
-
-    product = db.relationship("Product", backref="history")
