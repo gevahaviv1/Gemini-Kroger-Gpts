@@ -31,7 +31,7 @@ POLL_INTERVAL_MINUTES = 10
 def create_app():
     global app
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///zenday.db"
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///kroger.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev_secret_key")
     app.config["SESSION_TYPE"] = "filesystem"

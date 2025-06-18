@@ -44,8 +44,7 @@ Thumbs.db
 *.bak
 
 # Database
-instance/zenday.db
+instance/kroger.db
 token.json
 debug_kroger_api.py
-map_kroger_data/test_mapper.py
 PROJECT_STRUCTURE.txt

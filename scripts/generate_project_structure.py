@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 # Folders and files to ignore completely
 IGNORE_FOLDERS = {'.git', '__pycache__', '.pytest_cache', 'instance', 'venv'}
-IGNORE_FILES = {'.DS_Store', 'zenday.db'}
+IGNORE_FILES = {'.DS_Store', 'kroger.db'}
 
 README_PATH = 'README.md'
 START_TAG = '<!-- STRUCTURE_START -->'
@@ -61,7 +61,7 @@ def update_readme_with_structure(structure):
 if __name__ == "__main__":
     project_root = "."
     structure = generate_structure(project_root)
-    structure_text = "Project Structure - Zenday Kroger Price Alert\n\n" + structure
+    structure_text = "Project Structure - Kroger Price Alert\n\n" + structure
 
     # Save to .txt file
     with open("PROJECT_STRUCTURE.txt", "w") as f:
