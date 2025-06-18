@@ -1,5 +1,5 @@
 """Convenience wrapper for kroger_api service."""
-from zenday.services.kroger_api import (
+from kroger_app.services.kroger_api import (
     get_access_token,
     fetch_nearest_location,
     fetch_products,

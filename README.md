@@ -42,11 +42,11 @@ A Flask-based application that monitors Kroger product prices and manages shoppi
 
 ## Project Structure
 
-- `zenday.models` - database models
-- `zenday.routes` - API routes
-- `zenday.services` - external service helpers
-- `zenday.mappers` - data mapping utilities
-- `zenday.utils` - general utilities
+- `kroger_app.models` - database models
+- `kroger_app.routes` - API routes
+- `kroger_app.services` - external service helpers
+- `kroger_app.mappers` - data mapping utilities
+- `kroger_app.utils` - general utilities
 
 ## Usage
 

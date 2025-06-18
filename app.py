@@ -1,4 +1,4 @@
-from zenday import create_app, scheduler
+from kroger_app import create_app, scheduler
 
 app = create_app()
 
