@@ -1,6 +1,7 @@
 import os
 import logging
 import requests
+import base64
 from dotenv import load_dotenv
 
 load_dotenv()
