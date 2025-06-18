@@ -46,5 +46,6 @@ Thumbs.db
 # Database
 instance/kroger.db
 token.json
+token_full.json
 debug_kroger_api.py
 PROJECT_STRUCTURE.txt

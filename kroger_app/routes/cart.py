@@ -21,7 +21,7 @@ def auth_login():
             "REDIRECT_URI", "http://localhost:5000/auth/callback"
         ),
         # The Kroger API expects cart.basic scopes for cart operations
-        "scope": "cart.basic:read cart.basic:write product.compact profile.compact",
+        "scope": "cart.basic:write",
     }
     auth_url = f"{authorize_url}?" + "&".join(f"{k}={v}" for k, v in params.items())
     return jsonify({"auth_url": auth_url})
@@ -74,7 +74,7 @@ def view_cart():
         logger.error(f"Cart error: {str(e)}")
         return jsonify({"error": str(e)}), 500
 
-@cart_bp.route('/cart/add', methods=['POST'])
+@cart_bp.route('/cart/add', methods=['PUT'])
 def add_item_to_cart():
     token = session.get('kroger_token') or get_saved_token()
     logger.info(f"🔍 /cart/add: Session keys: {list(session.keys())}")
@@ -82,33 +82,20 @@ def add_item_to_cart():
     if not token:
         return jsonify({"error": "Please authenticate first at /auth/login"}), 401
     data = request.get_json()
-    if not data or "product_id" not in data:
-        return jsonify({"error": "Missing product_id"}), 400
+    if not data or "upc" not in data:
+        return jsonify({"error": "Missing upc"}), 400
     quantity = data.get("quantity", 1)
-    allow_substitutes = data.get("allow_substitutes", True)
-    special_instructions = data.get("special_instructions", "")
+    modality = data.get("modality", "PICKUP")
+    item_data = {
+        "upc": data["upc"],
+        "quantity": quantity,
+        "modality": modality
+    }
     try:
-        try:
-            logger.info("Getting current cart...")
-            cart_response = get_cart(token)
-            cart_id = None
-            if 'data' in cart_response and len(cart_response['data']) > 0:
-                cart_id = cart_response['data'][0]['id']
-                logger.info(f"Existing cart found with ID: {cart_id}")
-        except Exception as e:
-            logger.info(f"No existing cart found or error: {str(e)}")
-            cart_id = None
-        item_data = {"upc": data["product_id"], "quantity": quantity, "allowSubstitutes": allow_substitutes}
-        if special_instructions:
-            item_data["specialInstructions"] = special_instructions
-        if cart_id:
-            logger.info(f"Adding item to existing cart {cart_id}...")
-            result = add_to_cart(token, cart_id, [item_data])
-            return jsonify(result), 200
-        else:
-            logger.info("Creating new cart with item...")
-            result = create_cart(token, [item_data])
-            return jsonify(result), 201
+        logger.info(f"Adding item to cart via /v1/cart/add: {item_data}")
+        # Directly use add_to_cart which should use PUT /v1/cart/add in the service layer
+        result = add_to_cart(token, None, [item_data], modality=modality)
+        return jsonify(result), 200
     except Exception as e:
         logger.error(f"Cart error: {str(e)}")
         return jsonify({"error": str(e)}), 500
