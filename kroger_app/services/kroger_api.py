@@ -11,12 +11,7 @@ CLIENT_SECRET = os.getenv("KROGER_CLIENT_SECRET")
 TOKEN_URL = "https://api.kroger.com/v1/connect/oauth2/token"
 PRODUCTS_URL = "https://api.kroger.com/v1/products"
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s %(levelname)s %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,7 +19,7 @@ def get_access_token(auth_code=None, return_full_response=False):
     """
     Get access token using either Client Credentials flow (for product API)
     or Authorization Code flow (for cart API).
-    
+
     Args:
         auth_code: Optional authorization code from OAuth2 redirect
         return_full_response: If True, returns the full response JSON instead of just the token
@@ -34,40 +29,39 @@ def get_access_token(auth_code=None, return_full_response=False):
         payload = {
             "grant_type": "authorization_code",
             "code": auth_code,
-            "redirect_uri": os.getenv("REDIRECT_URI", "http://localhost:5000/auth/callback")
+            "redirect_uri": os.getenv(
+                "REDIRECT_URI", "http://localhost:5000/auth/callback"
+            ),
             # Note: We're not setting scope here because it should be set during the initial authorization request
         }
-        
+
         logger.info(f"Authorization Code payload: {payload}")
     else:
         # Client Credentials flow for product operations
-        payload = {
-            "grant_type": "client_credentials",
-            "scope": "product.compact"
-        }
-    
+        payload = {"grant_type": "client_credentials", "scope": "product.compact"}
+
     try:
         # Encode client ID and secret for Authorization header
         auth_str = f"{CLIENT_ID}:{CLIENT_SECRET}"
-        auth_bytes = auth_str.encode('ascii')
-        auth_b64 = base64.b64encode(auth_bytes).decode('ascii')
-        
+        auth_bytes = auth_str.encode("ascii")
+        auth_b64 = base64.b64encode(auth_bytes).decode("ascii")
+
         headers = {
             "Content-Type": "application/x-www-form-urlencoded",
-            "Authorization": f"Basic {auth_b64}"
+            "Authorization": f"Basic {auth_b64}",
         }
-        
+
         logger.info(f"Token request URL: {TOKEN_URL}")
         logger.info(f"Token request headers: {headers}")
-        
+
         resp = requests.post(TOKEN_URL, headers=headers, data=payload)
-        
+
         logger.info(f"Token response status: {resp.status_code}")
         try:
             logger.info(f"Token response body: {resp.text[:200]}...")
         except:
             logger.info("Could not print response body")
-        
+
         if resp.status_code != 200:
             error_msg = f"Failed to get token. Status code: {resp.status_code}"
             try:
@@ -77,13 +71,13 @@ def get_access_token(auth_code=None, return_full_response=False):
                 error_msg += f": {resp.text}"
             logger.error(error_msg)
             resp.raise_for_status()
-        
+
         response_data = resp.json()
-        
+
         # If requested, return the full response
         if return_full_response:
             return response_data
-            
+
         token = response_data.get("access_token")
         if not token:
             raise ValueError("No access_token in response")

@@ -90,12 +90,3 @@ def remove_from_cart(access_token: str, cart_id: str, upc: str) -> Dict:
         return handle_kroger_api_response(response)
     except requests.exceptions.RequestException as e:
         handle_kroger_request_exception(e)
-                    "Forbidden: Your token doesn't have the required cart.basic scope"
-                )
-            elif e.response.status_code == 400:
-                raise Exception(
-                    f"Bad request: {e.response.json().get('reason', 'Unknown error')}"
-                )
-            elif e.response.status_code == 404:
-                raise Exception(f"Item or cart not found")
-        raise Exception(f"Cart API error: {str(e)}")
