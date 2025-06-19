@@ -1,15 +1,7 @@
 import logging
-from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
-
-from ..models import db, Product, PriceHistory
-from ..services.kroger_api import (
-    fetch_products,
-    fetch_nearest_location,
-    get_access_token,
-)
-from ..mappers.kroger import map_kroger_to_zenday
-from kroger_app.services.products import process_product_data, monitor_watched_products
+from ..models import Product, PriceHistory
+from kroger_app.services.products import process_product_data
 
 logger = logging.getLogger(__name__)
 
