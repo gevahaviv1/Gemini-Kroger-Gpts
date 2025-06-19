@@ -1,6 +1,7 @@
 import logging
 import requests
 from typing import Dict, List, Optional
+from kroger_app.utils import handle_kroger_api_response, handle_kroger_request_exception
 
 
 logger = logging.getLogger(__name__)
@@ -29,25 +30,9 @@ def get_cart(access_token: str, cart_id: Optional[str] = None) -> Dict:
         except:
             logger.info("Could not print response body")
 
-        response.raise_for_status()
-        return response.json()
+        return handle_kroger_api_response(response)
     except requests.exceptions.RequestException as e:
-        logger.error(f"Exception: {str(e)}")
-        if e.response is not None:
-            logger.error(f"Response status: {e.response.status_code}")
-            logger.error(f"Response body: {e.response.text[:200]}...")
-
-            if e.response.status_code == 401:
-                raise Exception(
-                    "Unauthorized: Please check your API credentials and ensure you have cart access"
-                )
-            elif e.response.status_code == 403:
-                raise Exception(
-                    "Forbidden: Your token doesn't have the required cart.basic scope"
-                )
-            elif e.response.status_code == 404:
-                raise Exception("Cart not found")
-        raise Exception(f"Cart API error: {str(e)}")
+        handle_kroger_request_exception(e)
 
 
 def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") -> Dict:
@@ -69,55 +54,6 @@ def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
         "Content-Type": "application/json",
     }
 
-    def _handle_response(response):
-        logger.info(f"Response status: {response.status_code}")
-        try:
-            logger.info(f"Response body: {response.text[:200]}...")
-        except Exception:
-            logger.info("Could not print response body")
-        if response.status_code == 204:
-            return {"success": True, "message": "Item(s) added to cart."}
-        elif response.status_code == 401:
-            raise Exception(
-                "Unauthorized: Please check your API credentials and ensure you have cart access"
-            )
-        elif response.status_code == 403:
-            raise Exception(
-                "Forbidden: Your token doesn't have the required cart.basic scope"
-            )
-        elif response.status_code == 400:
-            try:
-                return {"error": response.json()}
-            except Exception:
-                return {"error": response.text}
-        else:
-            try:
-                return {"error": response.json()}
-            except Exception:
-                return {"error": response.text}
-
-    def _handle_request_exception(e):
-        logger.error(f"Exception: {str(e)}")
-        if e.response is not None:
-            logger.error(f"Response status: {e.response.status_code}")
-            logger.error(f"Response body: {e.response.text[:200]}...")
-            if e.response.status_code == 401:
-                raise Exception(
-                    "Unauthorized: Please check your API credentials and ensure you have cart access"
-                )
-            elif e.response.status_code == 403:
-                raise Exception(
-                    "Forbidden: Your token doesn't have the required cart.basic scope"
-                )
-            elif e.response.status_code == 400:
-                raise Exception(
-                    f"Bad request: {e.response.json().get('reason', 'Unknown error')}"
-                )
-            elif e.response.status_code == 404:
-                raise Exception("Cart not found")
-        raise Exception(f"Cart API error: {str(e)}")
-
-    # Format items for the API
     formatted_items = [
         {
             "upc": item.get("upc") or item.get("productId"),
@@ -132,9 +68,9 @@ def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
         response = requests.put(
             "https://api.kroger.com/v1/cart/add", headers=headers, json=data
         )
-        return _handle_response(response)
+        return handle_kroger_api_response(response)
     except requests.exceptions.RequestException as e:
-        _handle_request_exception(e)
+        handle_kroger_request_exception(e)
 
 
 def remove_from_cart(access_token: str, cart_id: str, upc: str) -> Dict:
@@ -151,16 +87,9 @@ def remove_from_cart(access_token: str, cart_id: str, upc: str) -> Dict:
         response = requests.delete(
             f"https://api.kroger.com/v1/cart/{cart_id}/items/{upc}", headers=headers
         )
-        response.raise_for_status()
-        return {"success": True, "message": f"Item {upc} removed from cart {cart_id}"}
+        return handle_kroger_api_response(response)
     except requests.exceptions.RequestException as e:
-        if e.response is not None:
-            if e.response.status_code == 401:
-                raise Exception(
-                    "Unauthorized: Please check your API credentials and ensure you have cart access"
-                )
-            elif e.response.status_code == 403:
-                raise Exception(
+        handle_kroger_request_exception(e)
                     "Forbidden: Your token doesn't have the required cart.basic scope"
                 )
             elif e.response.status_code == 400:
