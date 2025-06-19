@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-from .product import Product  # noqa: E402
-from .price_history import PriceHistory  # noqa: E402
+from .product import Product
+from .price_history import PriceHistory
 
 __all__ = ["db", "Product", "PriceHistory"]
