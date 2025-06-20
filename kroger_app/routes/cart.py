@@ -54,8 +54,6 @@ def auth_callback():
         return jsonify(
             {
                 "message": "Successfully authenticated",
-                "token_start": token[:10] if token else None,
-                "full_response": full_token_response,
             }
         )
     except Exception as e:
@@ -91,7 +89,7 @@ def add_item_to_cart():
     item_data = {"upc": data["upc"], "quantity": quantity, "modality": modality}
 
     try:
-        logger.info(f"Adding item to cart via /v1/cart/add: {item_data}")
+        logger.info(f"Adding item to cart.")
 
         result = add_to_cart(token, [item_data], modality=modality)
         return jsonify(result), 200

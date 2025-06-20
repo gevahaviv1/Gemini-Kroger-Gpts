@@ -50,11 +50,6 @@ def get_access_token(auth_code=None, return_full_response=False):
 
         resp = requests.post(TOKEN_URL, headers=headers, data=payload)
 
-        try:
-            logger.info(f"Token response body: {resp.text[:200]}...")
-        except:
-            logger.info("Could not print response body")
-
         if resp.status_code != 200:
             error_msg = f"Failed to get token. Status code: {resp.status_code}"
             try:
