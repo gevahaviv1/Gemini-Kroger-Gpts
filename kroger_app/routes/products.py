@@ -7,8 +7,6 @@ logger = logging.getLogger(__name__)
 
 products_bp = Blueprint("products", __name__)
 
-WATCHED_IDS = ["0001111041700"]
-
 
 @products_bp.route("/product/watch", methods=["POST"])
 def upsert_product_and_alert():

@@ -9,12 +9,15 @@ from ..services.kroger_api import (
 
 logger = logging.getLogger(__name__)
 
+WATCHED_IDS = ["0001111041700"]
+
 
 def map_kroger_to_zenday(data: dict) -> dict:
     item = data.get("items", [{}])[0]
     aisle = (data.get("aisleLocations") or [{}])[0]
     image = data.get("images", [{}])[0].get("sizes", [{}])[0]
     logger.info(item.get("price", {}).get("regular"))
+
     return {
         "id": data.get("productId"),
         "name": data.get("description"),
@@ -106,7 +109,7 @@ def process_product_data(prod_data):
     return {"alert": True, "new_price": new_pr}
 
 
-def monitor_watched_products(app, watched_ids):
+def monitor_watched_products(app):
     with app.app_context():
         token = get_access_token()
         loc = fetch_nearest_location(token, zip_code="45202")
@@ -114,7 +117,7 @@ def monitor_watched_products(app, watched_ids):
         if not loc_id:
             logger.warning("⚠️  No Kroger location found")
             return
-        for pid in watched_ids:
+        for pid in WATCHED_IDS:
             items = fetch_products(token, term=pid, limit=5, location_id=loc_id)
             raw = next((i for i in items if i.get("productId") == pid), None)
             if not raw:

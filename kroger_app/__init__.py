@@ -3,7 +3,7 @@ import logging
 from flask import Flask
 from apscheduler.schedulers.background import BackgroundScheduler
 from .models import db
-from .routes.products import products_bp, monitor_watched_products
+from .routes.products import products_bp
 from .routes.cart import cart_bp
 
 scheduler = BackgroundScheduler()

@@ -40,7 +40,6 @@ def auth_callback():
         full_token_response = get_access_token(
             auth_code=code, return_full_response=True
         )
-
         token = full_token_response.get("access_token")
         if not token:
             raise ValueError("No access_token in response")
@@ -67,8 +66,6 @@ def auth_callback():
 @cart_bp.route("/cart", methods=["GET"])
 def view_cart():
     token = session.get("kroger_token") or get_saved_token()
-    logger.info(f"🔍 /cart: Session keys: {list(session.keys())}")
-    logger.info(f"🔍 /cart: Token available: {'Yes' if token else 'No'}")
     if not token:
         return jsonify({"error": "Please authenticate first at /auth/login"}), 401
     try:
@@ -107,11 +104,14 @@ def add_item_to_cart():
 def remove_item_from_cart():
     token = session.get("kroger_token") or get_saved_token()
     logger.info(f"🔍 /cart/remove: Token available: {'Yes' if token else 'No'}")
+
     if not token:
         return jsonify({"error": "Please authenticate first at /auth/login"}), 401
+
     data = request.get_json()
     if not data or "product_id" not in data:
         return jsonify({"error": "Missing product_id"}), 400
+
     try:
         try:
             logger.info("Getting current cart...")

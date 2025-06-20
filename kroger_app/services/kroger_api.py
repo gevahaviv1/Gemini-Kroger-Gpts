@@ -32,10 +32,7 @@ def get_access_token(auth_code=None, return_full_response=False):
             "redirect_uri": os.getenv(
                 "REDIRECT_URI", "http://localhost:5000/auth/callback"
             ),
-            # Note: We're not setting scope here because it should be set during the initial authorization request
         }
-
-        logger.info(f"Authorization Code payload: {payload}")
     else:
         # Client Credentials flow for product operations
         payload = {"grant_type": "client_credentials", "scope": "product.compact"}
@@ -51,12 +48,8 @@ def get_access_token(auth_code=None, return_full_response=False):
             "Authorization": f"Basic {auth_b64}",
         }
 
-        logger.info(f"Token request URL: {TOKEN_URL}")
-        logger.info(f"Token request headers: {headers}")
-
         resp = requests.post(TOKEN_URL, headers=headers, data=payload)
 
-        logger.info(f"Token response status: {resp.status_code}")
         try:
             logger.info(f"Token response body: {resp.text[:200]}...")
         except:
