@@ -71,7 +71,7 @@ def view_cart():
         return jsonify(cart), 200
     except Exception as e:
         logger.error(f"Cart error: {str(e)}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"Cart error": str(e)})
 
 
 @cart_bp.route("/cart/add", methods=["PUT"])

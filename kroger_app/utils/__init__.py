@@ -13,13 +13,13 @@ def get_saved_token(path: str = "token.json"):
     try:
         with open(path, "r") as f:
             data = json.load(f)
-            return data.get("access_token") or data.get("token")
+            return data.get("token")
     except (FileNotFoundError, json.JSONDecodeError):
         return None
 
 
-def handle_kroger_api_response(
-    response, success_status_code=204, success_message="Item(s) added to cart."
+def exithandle_kroger_api_response(
+    response, success_status_code=200, success_message=""
 ):
     if response.status_code == success_status_code:
         return {"success": True, "message": success_message}
@@ -31,23 +31,13 @@ def handle_kroger_api_response(
         raise Exception(
             "Forbidden: Your token doesn't have the required cart.basic scope"
         )
-    elif response.status_code == 400:
-        try:
-            return {"error": response.json()}
-        except Exception:
-            return {"error": response.text}
     else:
-        try:
-            return {"error": response.json()}
-        except Exception:
-            return {"error": response.text}
+        raise Exception(f"Cart API error: {response.status_code} - {response.text}")
 
 
 def handle_kroger_request_exception(e):
     logger.error(f"Exception: {str(e)}")
     if hasattr(e, "response") and e.response is not None:
-        logger.error(f"Response status: {e.response.status_code}")
-        logger.error(f"Response body: {e.response.text[:200]}...")
         if e.response.status_code == 401:
             raise Exception(
                 "Unauthorized: Please check your API credentials and ensure you have cart access"

@@ -3,7 +3,6 @@ import requests
 from typing import Dict, List, Optional
 from kroger_app.utils import handle_kroger_api_response, handle_kroger_request_exception
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -24,15 +23,13 @@ def get_cart(access_token: str, cart_id: Optional[str] = None) -> Dict:
         )
 
         response = requests.get(url, headers=headers)
-
-        try:
-            logger.info(f"Response body: {response.text[:200]}...")
-        except:
-            logger.info("Could not print response body")
-
-        return handle_kroger_api_response(response)
+        success = handle_kroger_api_response(response, 204, "Got cart.")["success"]
+        if success:
+            return response.json()
     except requests.exceptions.RequestException as e:
         handle_kroger_request_exception(e)
+    except Exception as e:
+        raise
 
 
 def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") -> Dict:
@@ -68,9 +65,14 @@ def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
         response = requests.put(
             "https://api.kroger.com/v1/cart/add", headers=headers, json=data
         )
-        return handle_kroger_api_response(response)
+
+        response = handle_kroger_api_response(response, 204, "Item(s) added to cart.")
+        if response["success"]:
+            return response
     except requests.exceptions.RequestException as e:
         handle_kroger_request_exception(e)
+    except Exception as e:
+        raise
 
 
 def remove_from_cart(access_token: str, cart_id: str, upc: str) -> Dict:
