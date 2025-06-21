@@ -22,7 +22,13 @@ def get_cart(access_token: str, cart_id: Optional[str] = None) -> Dict:
             else "https://api.kroger.com/v1/cart"
         )
 
+        logger.info(f"Request URL: {url}")
+        logger.info(f"Request Headers: {headers}")
+
         response = requests.get(url, headers=headers)
+        logger.info(f"Response Status: {response.status_code}")
+        logger.info(f"Response Text: {response.text}")
+
         success = handle_kroger_api_response(response, 204, "Got cart.")["success"]
         if success:
             return response.json()

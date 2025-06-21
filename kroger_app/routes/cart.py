@@ -90,8 +90,8 @@ def add_item_to_cart():
 
     try:
         logger.info(f"Adding item to cart.")
-
         result = add_to_cart(token, [item_data], modality=modality)
+        logger.info("✅ Item added to cart")
         return jsonify(result), 200
     except Exception as e:
         logger.error(f"Cart error: {str(e)}")

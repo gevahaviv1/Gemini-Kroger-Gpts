@@ -18,9 +18,7 @@ def get_saved_token(path: str = "token.json"):
         return None
 
 
-def exithandle_kroger_api_response(
-    response, success_status_code=200, success_message=""
-):
+def handle_kroger_api_response(response, success_status_code=200, success_message=""):
     if response.status_code == success_status_code:
         return {"success": True, "message": success_message}
     elif response.status_code == 401:
