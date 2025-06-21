@@ -1,6 +1,6 @@
 import logging
 import requests
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from kroger_app.utils import handle_kroger_api_response, handle_kroger_request_exception
 
 logger = logging.getLogger(__name__)
@@ -38,18 +38,17 @@ def get_cart(access_token: str, cart_id: Optional[str] = None) -> Dict:
         raise
 
 
-def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") -> Dict:
+def add_to_cart(access_token: str, item: Dict) -> Dict:
     """
     Add items to the Kroger cart using the /v1/cart/add endpoint.
     Args:
         access_token: OAuth2 access token
-        items: List of items to add, each with format:
+        item: Item to add, with format:
             {
                 "upc": "0001111041700",
                 "quantity": 1,
                 "modality": "PICKUP" (optional)
             }
-        modality: Fulfillment type (PICKUP or DELIVERY)
     """
     headers = {
         "Accept": "application/json",
@@ -57,15 +56,15 @@ def add_to_cart(access_token: str, items: List[Dict], modality: str = "PICKUP") 
         "Content-Type": "application/json",
     }
 
-    formatted_items = [
+    # Need to convert to adding items - missing dependencies
+    formatted_item = [
         {
-            "upc": item.get("upc") or item.get("productId"),
+            "upc": item.get("upc"),
             "quantity": item.get("quantity", 1),
-            "modality": item.get("modality", modality),
+            "modality": item.get("modality", "PICKUP"),
         }
-        for item in items
     ]
-    data = {"items": formatted_items}
+    data = {"items": formatted_item}
 
     try:
         response = requests.put(

@@ -1,7 +1,4 @@
 import json
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def save_token(token: str, path: str = "token.json"):
@@ -34,7 +31,6 @@ def handle_kroger_api_response(response, success_status_code=200, success_messag
 
 
 def handle_kroger_request_exception(e):
-    logger.error(f"Exception: {str(e)}")
     if hasattr(e, "response") and e.response is not None:
         if e.response.status_code == 401:
             raise Exception(

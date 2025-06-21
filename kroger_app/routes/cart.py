@@ -77,6 +77,7 @@ def view_cart():
 @cart_bp.route("/cart/add", methods=["PUT"])
 def add_item_to_cart():
     token = session.get("kroger_token") or get_saved_token()
+
     if not token:
         return jsonify({"error": "Please authenticate first at /auth/login"}), 401
 
@@ -84,13 +85,13 @@ def add_item_to_cart():
     if not data or "upc" not in data:
         return jsonify({"error": "Missing upc"}), 400
 
-    quantity = data.get("quantity", 1)
-    modality = data.get("modality", "PICKUP")
-    item_data = {"upc": data["upc"], "quantity": quantity, "modality": modality}
+    # quantity = data.get("quantity", 1)
+    # modality = data.get("modality", "PICKUP")
+    # item_data = {"upc": data["upc"], "quantity": quantity, "modality": modality}
 
     try:
         logger.info(f"Adding item to cart.")
-        result = add_to_cart(token, [item_data], modality=modality)
+        result = add_to_cart(token, data)
         logger.info("✅ Item added to cart")
         return jsonify(result), 200
     except Exception as e:
